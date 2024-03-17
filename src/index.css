@@ -1,0 +1,10 @@
+:root {
+  background-color: #242424;
+}
+
+body {
+  display: flex;
+  place-items: center;
+  justify-content: center;
+  padding-top: 5%;
+}

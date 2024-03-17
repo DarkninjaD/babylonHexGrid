@@ -1,0 +1,6 @@
+.gameScreen {
+  display: flex;
+  justify-content: center;
+  height: 80vh;
+  width: 80vh;
+}
