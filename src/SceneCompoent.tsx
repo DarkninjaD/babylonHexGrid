@@ -51,7 +51,7 @@ const onSceneReady = async (scene: Scene) => {
 
   // this Loads the Hex Container as an instance. you still need to call ".instantiateModelsToScene()" to add it to the scene
   const hexLoad = await SceneLoader.LoadAssetContainerAsync(
-    "./src/assets/",
+    "./",
     "hexTile.glb",
     scene
   );
