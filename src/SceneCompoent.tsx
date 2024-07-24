@@ -71,22 +71,23 @@ const onSceneReady = async (scene: Scene) => {
   NodeMaterial.ParseFromSnippetAsync("TD23TV#21", scene).then((meshSnippet) => {
     waterMaterialTop = meshSnippet;
     waterMaterialTop.name = "waterMaterialTop";
-
+    // Water
     NodeMaterial.ParseFromSnippetAsync("BS6C1U#1", scene).then(
       (meshSnippet) => {
         waterMaterialBottom = meshSnippet;
         waterMaterialBottom.name = "waterMaterialBottom";
-        createHexGrid(
-          gridSize,
-          hexLength,
-          hexWidthDistance,
-          hexHeightDistance,
-          rowLengthAddition,
-          scene,
-          hexLoad,
-          waterMaterialTop
-        );
       }
+    );
+    //
+    createHexGrid(
+      gridSize,
+      hexLength,
+      hexWidthDistance,
+      hexHeightDistance,
+      rowLengthAddition,
+      scene,
+      hexLoad,
+      waterMaterialTop
     );
   });
 
