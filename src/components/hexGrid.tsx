@@ -2,7 +2,6 @@ import {
   Vector3,
   HemisphericLight,
   Scene,
-  AssetContainer,
   SceneLoader,
   ArcRotateCamera,
   Tools,
@@ -12,36 +11,35 @@ import {
 import SceneComponent from "babylonjs-hook";
 import "@babylonjs/loaders";
 import "./gameScreen.css";
+import { WaterTile } from "./gameTiles/WaterTile";
+import { createHexGrid } from "../util/createHexGrid";
+import screenBind from "../util/screenBind";
 
-let camera: ArcRotateCamera | undefined;
+export let camera: ArcRotateCamera | undefined;
 
 const onSceneReady = async (scene: Scene) => {
+  // Start Setup camera
   camera = new ArcRotateCamera(
-    "camera",
+    "main",
     Tools.ToRadians(90),
     Tools.ToRadians(45),
     10,
     Vector3.Zero(),
     scene
   );
-
   // This targets the camera to scene origin
   camera.lowerRadiusLimit = 5;
+
+  // End Setup camera
+
   const canvas = scene.getEngine().getRenderingCanvas();
 
   // This attaches the camera to the canvas
   camera.attachControl(canvas, true);
 
-  scene.onKeyboardObservable.add((kbInf) => {
-    switch (kbInf.type) {
-      case KeyboardEventTypes.KEYDOWN:
-        handleWASD(kbInf.event.key, camera!);
-        break;
-      case KeyboardEventTypes.KEYUP:
-        // console.log("KEY UP: ", kbInf.event.code);
-        break;
-    }
-  });
+  scene.onKeyboardObservable.add((keyboardInput) =>
+    screenBind(keyboardInput, camera!)
+  );
 
   // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
   const light = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
@@ -49,12 +47,16 @@ const onSceneReady = async (scene: Scene) => {
   // Default intensity is 1. Let's dim the light a small amount
   light.intensity = 0.8;
 
-  // this Loads the Hex Container as an instance. you still need to call ".instantiateModelsToScene()" to add it to the scene
+  // Loads Mesh Assets
+  // This Loads the Hex Container as an instance. you still need to call ".instantiateModelsToScene()" to add it to the scene
+  // We might need to think about how we load assets. maybe we think of scenes, objects, texture, actions? idk
+  // for now this is fine.
   const hexLoad = await SceneLoader.LoadAssetContainerAsync(
     "./",
     "hexTile.glb",
     scene
   );
+  // Loads Mesh Assets
 
   // values that can be edited to change to scene.
   // TODO: I hate this 🤮
@@ -71,14 +73,10 @@ const onSceneReady = async (scene: Scene) => {
   NodeMaterial.ParseFromSnippetAsync("TD23TV#21", scene).then((meshSnippet) => {
     waterMaterialTop = meshSnippet;
     waterMaterialTop.name = "waterMaterialTop";
-    // Water
-    NodeMaterial.ParseFromSnippetAsync("BS6C1U#1", scene).then(
-      (meshSnippet) => {
-        waterMaterialBottom = meshSnippet;
-        waterMaterialBottom.name = "waterMaterialBottom";
-      }
-    );
-    //
+    WaterTile(scene).then((meshSnippet) => {
+      waterMaterialBottom = meshSnippet;
+      waterMaterialBottom.name = "waterMaterialBottom";
+    });
     createHexGrid(
       gridSize,
       hexLength,
@@ -121,85 +119,6 @@ const onSceneReady = async (scene: Scene) => {
       });
     }
   };
-};
-
-const createHexGrid = (
-  gridSize: number,
-  hexLength: number,
-  hexWidthDistance: number,
-  hexHeightDistance: number,
-  rowLengthAddition: number,
-  scene: Scene,
-  hexLoad: AssetContainer,
-  waterMaterialTop: NodeMaterial
-) => {
-  let gridStart = new Vector3(
-    (hexWidthDistance / 2) * (gridSize - 1),
-    0,
-    -hexHeightDistance * 0.75 * (gridSize - 1)
-  );
-
-  for (let i = 0; i < gridSize * 2 - 1; i++) {
-    for (let y = 0; y < gridSize + rowLengthAddition; y++) {
-      let hexTile = hexLoad.instantiateModelsToScene();
-      let hexTileRoot = hexTile.rootNodes[0];
-
-      hexTileRoot.name = "hexTile" + i + y;
-      hexTileRoot.position.copyFrom(gridStart);
-      hexTileRoot.position.x -= hexWidthDistance * y;
-
-      let hexChildren = hexTileRoot.getDescendants();
-      for (let k = 0; k < hexChildren.length; k++) {
-        hexChildren[k].name = hexChildren[k].name.slice(9);
-        if (hexChildren[k].name === "terrain") {
-          hexChildren[k].setEnabled(false);
-        }
-      }
-
-      let hexTileChildMeshes = hexTileRoot.getChildMeshes();
-      for (let j = 0; j < hexTileChildMeshes.length; j++) {
-        if (hexTileChildMeshes[j].name === "top") {
-          hexTileChildMeshes[j].material = waterMaterialTop;
-          hexTileChildMeshes[j].hasVertexAlpha = false;
-        }
-      }
-
-      let hexTileAnimGroup = hexTile.animationGroups[0];
-      hexTileAnimGroup.name = "AnimGroup" + hexTileRoot.name;
-    }
-
-    if (i >= gridSize - 1) {
-      rowLengthAddition -= 1;
-      gridStart.x -= hexWidthDistance / 2;
-      gridStart.z += hexHeightDistance * 0.75;
-    } else {
-      rowLengthAddition += 1;
-      gridStart.x += hexWidthDistance / 2;
-      gridStart.z += hexHeightDistance * 0.75;
-    }
-  }
-  camera!.radius = gridSize * 5;
-  camera!.upperRadiusLimit = camera!.radius + 5;
-
-  let allAnimGroups = scene.animationGroups;
-  for (let i = 0; i < allAnimGroups.length; i++) {
-    allAnimGroups[i].reset();
-  }
-};
-
-const handleWASD = (key: string, camera: ArcRotateCamera) => {
-  if (key === "s") {
-    if (camera.beta! < 1.4) camera.beta += 0.05;
-  }
-  if (key === "w") {
-    camera.beta -= 0.05;
-  }
-  if (key === "a") {
-    camera.alpha += 0.05;
-  }
-  if (key === "d") {
-    camera.alpha -= 0.05;
-  }
 };
 
 //

@@ -1,7 +1,7 @@
 import { NodeMaterial, Scene } from "@babylonjs/core";
-import { ErrorTile } from "./errorTile";
+import { ErrorTile } from "./ErrorTile";
 
-export const WaterTile = async (scene: Scene): NodeMaterial => {
+export const WaterTile = async (scene: Scene): Promise<NodeMaterial> => {
   let material: NodeMaterial = await NodeMaterial.ParseFromSnippetAsync(
     "BS6C1U#1",
     scene
