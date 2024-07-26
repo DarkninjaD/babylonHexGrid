@@ -10,7 +10,7 @@ import {
 } from "@babylonjs/core";
 import SceneComponent from "babylonjs-hook";
 import "@babylonjs/loaders";
-import "./gameScreen.css";
+import "../gameScreen.css";
 import { WaterTile } from "./gameTiles/WaterTile";
 import { createHexGrid } from "../util/createHexGrid";
 import screenBind from "../util/screenBind";
