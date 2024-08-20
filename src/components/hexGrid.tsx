@@ -6,14 +6,14 @@ import {
   ArcRotateCamera,
   Tools,
   NodeMaterial,
-  KeyboardEventTypes,
 } from "@babylonjs/core";
 import SceneComponent from "babylonjs-hook";
 import "@babylonjs/loaders";
 import "../gameScreen.css";
-import { WaterTile } from "./gameTiles/WaterTile";
+import { WaterTile, GrassTile, MountainTile,} from "./gameTiles";
 import { createHexGrid } from "../util/createHexGrid";
 import screenBind from "../util/screenBind";
+import { FaceTile } from "./gameTiles/FaceTile";
 
 export let camera: ArcRotateCamera | undefined;
 
@@ -60,23 +60,34 @@ const onSceneReady = async (scene: Scene) => {
 
   // values that can be edited to change to scene.
   // TODO: I hate this 🤮
-  let gridSize = 2;
+  let gridSize = 5;
   let hexLength = 1;
   let hexWidthDistance = Math.sqrt(3) * hexLength;
   let hexHeightDistance = 2 * hexLength;
   let rowLengthAddition = 0;
 
+
+  // region Load Texture
   let waterMaterialTop: NodeMaterial;
   let waterMaterialBottom: NodeMaterial;
+  let grassMaterialBottom: NodeMaterial;
+  let mountainMaterialBottom: NodeMaterial;
 
-  //TODO: change up the Material so it looks more like... felids? or just clouds
-  NodeMaterial.ParseFromSnippetAsync("TD23TV#21", scene).then((meshSnippet) => {
+  WaterTile().then((meshSnippet) => {
+    waterMaterialBottom = meshSnippet;
+    waterMaterialBottom.name = "waterMaterialBottom";
+  });
+
+  grassMaterialBottom = GrassTile()
+  mountainMaterialBottom = MountainTile()
+
+  // TODO: change up the Material so it looks more like... felids? or just clouds
+  FaceTile().then((meshSnippet) => {
     waterMaterialTop = meshSnippet;
     waterMaterialTop.name = "waterMaterialTop";
-    WaterTile(scene).then((meshSnippet) => {
-      waterMaterialBottom = meshSnippet;
-      waterMaterialBottom.name = "waterMaterialBottom";
-    });
+  }).then(() => {
+    // Main problem here is that some assest the FaceTile
+    // needs to be load before the createHexGrid runs
     createHexGrid(
       gridSize,
       hexLength,
@@ -88,6 +99,9 @@ const onSceneReady = async (scene: Scene) => {
       waterMaterialTop
     );
   });
+  // endregion
+
+
 
   // NOTE: The only way I can see about abstracting this functions definitions is to place the whole thing in a class.
   //  it's not a bad idea to have a class that setts up the Hex grid scene. and then go from there.
@@ -104,7 +118,16 @@ const onSceneReady = async (scene: Scene) => {
           let siblingMeshes = pickResult.pickedMesh?.parent?.getChildMeshes();
           siblingMeshes?.forEach((sibMesh) => {
             if (sibMesh.name === "bottom") {
-              sibMesh.material = waterMaterialBottom;
+              let dice : number = Math.floor(Math.random() * 6 )+1
+              if (dice >= 4) {
+                sibMesh.material = mountainMaterialBottom;
+              }
+              if(dice < 4 && dice > 1) {
+                sibMesh.material = grassMaterialBottom;
+              }
+              if (dice === 1) {
+                sibMesh.material = waterMaterialBottom;
+              }
             }
           });
           animation.play();
