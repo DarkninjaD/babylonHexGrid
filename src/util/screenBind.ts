@@ -1,6 +1,5 @@
 import {
   ArcRotateCamera,
-  Camera,
   KeyboardEventTypes,
   KeyboardInfo,
 } from "@babylonjs/core";
